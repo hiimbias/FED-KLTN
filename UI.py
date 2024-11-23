@@ -16,6 +16,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import  QFileDialog
 import cv2
 from tensorflow.keras.models import model_from_json # type: ignore
+import time
 
 
 
@@ -281,11 +282,12 @@ class Ui_Form(object):
 
     # Emotion Detection in Real Time
     def opencamera(self):
+        import time  # Import the time module
 
         cv2.destroyAllWindows()
         stream = cv2.VideoCapture(0)
-        stream.set(cv2.CAP_PROP_FPS,60.0)
-        (major_ver, minor_ver, subminor_ver) = (cv2.__version__).split('.') # get the version of cv2
+        stream.set(cv2.CAP_PROP_FPS, 60.0)
+        (major_ver, minor_ver, subminor_ver) = (cv2.__version__).split('.')  # get the version of cv2
 
         if int(major_ver) < 3:
             fps = stream.get(cv2.cv.CV_CAP_PROP_FPS)
@@ -314,6 +316,8 @@ class Ui_Form(object):
                     confidence = detections[0, 0, i, 2]
 
                     if confidence > 0.5:
+                        start_time = time.time()  # Start timing
+
                         box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
                         (x, y, ex, ey) = box.astype("int")
                         width = x + ex
@@ -338,28 +342,28 @@ class Ui_Form(object):
 
                         top = predicted_combine[0].argsort()[-2:][::-1]
 
-                        Prob1 = predicted_combine[0][top[0]] # pick the highest rating
-                        # print(Prob1)
-                        Prob2 = predicted_combine[0][top[1]]
-                        # pick the second highest rating
-                        print(predicted_combine[0])
+                        Prob1 = predicted_combine[0][top[0]]  # pick the highest rating
+                        Prob2 = predicted_combine[0][top[1]]  # pick the second highest rating
 
                         fontScale = (width + height) / (width * height) + 0.4
                         cv2.rectangle(frame, (x - 20, y), (ex + 20, ey), (139, 240, 166), 1, cv2.LINE_AA)
                         cv2.rectangle(frame, (x - 20, ey), (ex + 20, ey + 20), (139, 240, 166), -1)
                         cv2.putText(frame, emotion_dict[top[0]], (x - 15, ey + 15), cv2.FONT_HERSHEY_SIMPLEX, fontScale,
                                     (0, 0, 255), 1, cv2.LINE_AA)
-                        if Prob2 > 0.05: # if the rating is higher than threshold
+                        if Prob2 > 0.05:  # if the rating is higher than threshold
                             cv2.rectangle(frame, (x - 20, ey + 20), (ex + 20, ey + 20 + 15), (139, 240, 166), -1)
                             cv2.putText(frame, emotion_dict[top[1]], (x - 15, ey + 15 + 15),
                                         cv2.FONT_HERSHEY_SIMPLEX, fontScale, (0, 0, 255), 1, cv2.LINE_AA)
+
+                        end_time = time.time()  # End timing
+                        print(
+                            f"Time taken for emotion recognition: {end_time - start_time} seconds")  # Print the time taken
 
                 cv2.imshow('PRESS Q TO EXIT', frame)
 
             except:
                 print("Warning : Bound Box Out of Frame !")
                 continue
-
     # browse file base on file type
     def browse(self):
         fileName, _ = QFileDialog.getOpenFileName(None, "Browse", "",
