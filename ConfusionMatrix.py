@@ -5,8 +5,8 @@ from sklearn.metrics import confusion_matrix
 from sklearn.metrics import accuracy_score
 
 
-y_true = np.load('/Users/hiimbias/PycharmProjects/FED/Fer2013_Predict_y_SIFT.npy')
-y_pred = np.load('/Users/hiimbias/PycharmProjects/FED/Fer2013_True_y_SIFT.npy')
+y_true = np.load('/confusion_rsrc/Fer2013_Predict_y_SIFT.npy')
+y_pred = np.load('/confusion_rsrc/Fer2013_True_y_SIFT.npy')
 print(len(y_true))
 print(len(y_pred))
 print(accuracy_score(y_true, y_pred))

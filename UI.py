@@ -49,6 +49,16 @@ Kmean_SIFT = pickle.load(open("/Users/hiimbias/PycharmProjects/FED/models/SIFT_D
 
 emotion_dict = {0: "ANGRY", 1: "DISGUST", 2: "FEAR", 3: "HAPPY", 4: "SAD", 5: "SURPRISE", 6: "NEUTRAL"}
 
+emotion_colors = {
+    "ANGRY": (97, 105, 255),       # Red
+    "DISGUST": (119, 221, 119),     # Green
+    "FEAR": (225, 177, 195),        # Purple
+    "HAPPY": (150, 253, 253),     # Yellow
+    "SAD": (207, 198, 174),       # Cyan
+    "SURPRISE": (152, 200, 250),  # Magenta
+    "NEUTRAL": (255, 255, 255)  # White
+}
+
 # Face Detection
 modelFile = "models/opencv_face_detector_uint8.pb"
 configFile = "models/opencv_face_detector.pbtxt"
@@ -56,6 +66,8 @@ net = cv2.dnn.readNetFromTensorflow(modelFile, configFile) # load the model into
 
 # Detecting Emotion in Image
 def imageDetect(img):
+
+    start_time = time.time()
 
     if (img.shape[0] > 720 or img.shape[1] > 1080):
         if(img.shape[0] > img.shape[1]):
@@ -85,7 +97,7 @@ def imageDetect(img):
     (h, w) = img.shape[:2] # get the height and width of the image
 
     blob = cv2.dnn.blobFromImage(cv2.resize(img, (300, 300),interpolation=cv2.INTER_AREA), 1.0, (300, 300),(104.0,
-                                                                                                            117.0,
+                                                                                                            177.0,
                                                                                                             123.0)) # create a blob from the image
     # mean rgb value is always 104, 177, 123
     # Truyền dữ liệu vào mạng nhận diện khuôn mặt
@@ -117,8 +129,8 @@ def imageDetect(img):
             predicted_V2 = model_CNN_2.predict(cropped_img)
             predicted_SIFT = model_SIFTNET.predict([cropped_img, sift_bow_vector])
 
-            predicted_combine = (predicted_SIFT + predicted_V1 + predicted_V2) / 3.0 # predicted_combine's type is numpy array
-
+            # predicted_combine = (predicted_SIFT + predicted_V1 + predicted_V2) / 3.0 # predicted_combine's type is numpy array
+            predicted_combine =  predicted_V1
             top = predicted_combine[0].argsort()[-2:][::-1] # get the top 2 highest ratings
             print(predicted_combine[0])
             print(predicted_combine[0].argsort())
@@ -140,6 +152,9 @@ def imageDetect(img):
                 cv2.rectangle(img, (x - 20, ey + 20), (ex + 20, ey + 20 + 15), (0, 255, 0), -1)
                 cv2.putText(img, f"{emotion_dict[top[1]]}: {Prob2:.2f}", (x - 15, ey + 15 + 15),
                             cv2.FONT_HERSHEY_SIMPLEX, fontScale,(0, 0, 255), 1, cv2.LINE_AA)
+
+    end_time = time.time()
+    print(f"Time taken for emotion recognition: {end_time - start_time} seconds")
     cv2.imshow('Result', img)
 
 
@@ -282,8 +297,6 @@ class Ui_Form(object):
 
     # Emotion Detection in Real Time
     def opencamera(self):
-        import time  # Import the time module
-
         cv2.destroyAllWindows()
         stream = cv2.VideoCapture(0)
         stream.set(cv2.CAP_PROP_FPS, 60.0)
@@ -342,22 +355,24 @@ class Ui_Form(object):
 
                         top = predicted_combine[0].argsort()[-2:][::-1]
 
+                        emotion = emotion_dict[top[0]]
+                        color = emotion_colors[emotion]
+
                         Prob1 = predicted_combine[0][top[0]]  # pick the highest rating
                         Prob2 = predicted_combine[0][top[1]]  # pick the second highest rating
 
                         fontScale = (width + height) / (width * height) + 0.4
-                        cv2.rectangle(frame, (x - 20, y), (ex + 20, ey), (139, 240, 166), 1, cv2.LINE_AA)
-                        cv2.rectangle(frame, (x - 20, ey), (ex + 20, ey + 20), (139, 240, 166), -1)
+                        cv2.rectangle(frame, (x - 20, y), (ex + 20, ey), color, 1, cv2.LINE_AA)
+                        cv2.rectangle(frame, (x - 20, ey), (ex + 20, ey + 20), color, -1)
                         cv2.putText(frame, emotion_dict[top[0]], (x - 15, ey + 15), cv2.FONT_HERSHEY_SIMPLEX, fontScale,
-                                    (0, 0, 255), 1, cv2.LINE_AA)
+                                    (0, 0, 0), 1, cv2.LINE_AA)
                         if Prob2 > 0.05:  # if the rating is higher than threshold
-                            cv2.rectangle(frame, (x - 20, ey + 20), (ex + 20, ey + 20 + 15), (139, 240, 166), -1)
+                            cv2.rectangle(frame, (x - 20, ey + 20), (ex + 20, ey + 20 + 15), color, -1)
                             cv2.putText(frame, emotion_dict[top[1]], (x - 15, ey + 15 + 15),
-                                        cv2.FONT_HERSHEY_SIMPLEX, fontScale, (0, 0, 255), 1, cv2.LINE_AA)
+                                        cv2.FONT_HERSHEY_SIMPLEX, fontScale, (0, 0, 0), 1, cv2.LINE_AA)
 
-                        end_time = time.time()  # End timing
-                        print(
-                            f"Time taken for emotion recognition: {end_time - start_time} seconds")  # Print the time taken
+                        end_time = time.time()
+                        print(f"Time taken for emotion recognition: {end_time - start_time} seconds")
 
                 cv2.imshow('PRESS Q TO EXIT', frame)
 

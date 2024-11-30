@@ -44,7 +44,7 @@ def Test_Combine(X,Y):
     predicted_V1 = model_CNN_1.predict(X)
     predicted_V2 = model_CNN_2.predict(X)
     predicted_SIFT = model_SIFTNET.predict([X, X_SIFT_Test])
-    predicted_combine =    (predicted_SIFT + predicted_V1+predicted_V2)/3.0
+    predicted_combine =    (predicted_SIFT + predicted_V1 + predicted_V2)/3.0
 
 
 

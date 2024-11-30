@@ -19,7 +19,7 @@ def load_data():
 
     x = np.expand_dims(x, -1) # Add channel dimension to fit the input shape of the model
     x = x / 255.0 # Normalize
-    y = np.eye(7,dtype='uint8')[y] # One hot encoding
+    y = np.eye(7,dtype='uint8')[y] # One hot encoding to fit the output shape of the model
     print(y.shape)
     print(y)
 
