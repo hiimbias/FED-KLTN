@@ -1,6 +1,6 @@
 import numpy as np
 import pickle
-from features import Vocabularyize, Histogram_All_Images
+from features import Vocabularyize
 
 
 X_filename = "/Users/hiimbias/PycharmProjects/FED/dataset/Fer_X.npy"

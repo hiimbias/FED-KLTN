@@ -22,30 +22,30 @@ import time
 
 # Loading model into UI
 # CNN_1
-json_model = open("models/CNN_v1_Fer2013_model.json", 'r')
+json_model = open("models/CNN_v1/CNN_v1_Fer2013_model.json", 'r')
 loaded_json_model = json_model.read()
 json_model.close()
 model_CNN_1 = model_from_json(loaded_json_model)
-model_CNN_1.load_weights("/Users/hiimbias/PycharmProjects/FED/models/CNN_v1_Fer2013_best_weights.keras")
+model_CNN_1.load_weights("models/CNN_v1/CNN_v1_Fer2013_best_weights.keras")
 
 # CNN_2
-json_model = open("models/CNN_v2_Fer2013_model.json", 'r')
+json_model = open("models/CNN_v2/CNN_v2_Fer2013_model.json", 'r')
 loaded_json_model = json_model.read()
 json_model.close()
 model_CNN_2 = model_from_json(loaded_json_model)
-model_CNN_2.load_weights("/Users/hiimbias/PycharmProjects/FED/models/CNN_v2_Fer2013_final_weights.keras")
+model_CNN_2.load_weights("models/CNN_v2/CNN_v2_Fer2013_final_weights.keras")
 
 # model_CNN_2.summary()
 
 # SIFTNET
-json_model = open("models/ConvSIFTNET_Fer2013_model.json", 'r')
+json_model = open("models/CNN_SIFT/ConvSIFTNET_Fer2013_model.json", 'r')
 loaded_json_model = json_model.read()
 json_model.close()
 model_SIFTNET = model_from_json(loaded_json_model)
-model_SIFTNET.load_weights("/Users/hiimbias/PycharmProjects/FED/models/ConvSIFTNET_Fer2013_final_model.keras")
+model_SIFTNET.load_weights("models/CNN_SIFT/ConvSIFTNET_Fer2013_final_model.keras")
 
 # Kmean model to extract SIFT features
-Kmean_SIFT = pickle.load(open("/Users/hiimbias/PycharmProjects/FED/models/SIFT_Detector_Kmean_model_1.sav", 'rb'))
+Kmean_SIFT = pickle.load(open("models/descriptors/SIFT_Detector_Kmean_model_1.sav", 'rb'))
 
 emotion_dict = {0: "ANGRY", 1: "DISGUST", 2: "FEAR", 3: "HAPPY", 4: "SAD", 5: "SURPRISE", 6: "NEUTRAL"}
 
@@ -60,8 +60,8 @@ emotion_colors = {
 }
 
 # Face Detection
-modelFile = "models/opencv_face_detector_uint8.pb"
-configFile = "models/opencv_face_detector.pbtxt"
+modelFile = "models/pretrained_opencv/opencv_face_detector_uint8.pb"
+configFile = "models/pretrained_opencv/opencv_face_detector.pbtxt"
 net = cv2.dnn.readNetFromTensorflow(modelFile, configFile) # load the model into the network
 
 # Detecting Emotion in Image
@@ -129,12 +129,14 @@ def imageDetect(img):
             predicted_V2 = model_CNN_2.predict(cropped_img)
             predicted_SIFT = model_SIFTNET.predict([cropped_img, sift_bow_vector])
 
-            # predicted_combine = (predicted_SIFT + predicted_V1 + predicted_V2) / 3.0 # predicted_combine's type is numpy array
-            predicted_combine =  predicted_V1
+            predicted_combine = (predicted_SIFT + predicted_V1 + predicted_V2) / 3.0 # predicted_combine's type is numpy array
             top = predicted_combine[0].argsort()[-2:][::-1] # get the top 2 highest ratings
             print(predicted_combine[0])
             print(predicted_combine[0].argsort())
             print(top)
+
+            emotion = emotion_dict[top[0]]
+            color = emotion_colors[emotion]
 
             Prob1 = predicted_combine[0][top[0]]
             Prob2 = predicted_combine[0][top[1]]
@@ -143,15 +145,15 @@ def imageDetect(img):
 
             fontScale = (width + height) / (width * height) + 0.4
 
-            cv2.rectangle(img, (x - 20, y), (ex + 20, ey), (0, 255, 0), 1, cv2.LINE_AA)
-            cv2.rectangle(img, (x - 20, ey), (ex + 20, ey + 20), (0, 255, 0), -1)
+            cv2.rectangle(img, (x - 20, y), (ex + 20, ey), color , 1, cv2.LINE_AA)
+            cv2.rectangle(img, (x - 20, ey), (ex + 20, ey + 20), color , -1)
             cv2.putText(img, f"{emotion_dict[top[0]]}: {Prob1:.2f}", (x - 15, ey + 15), cv2.FONT_HERSHEY_SIMPLEX,
-                        fontScale, (0, 0, 255), 1, cv2.LINE_AA)
+                        fontScale, (0, 0, 0), 1, cv2.LINE_AA)
 
             if Prob2 > 0.05:
-                cv2.rectangle(img, (x - 20, ey + 20), (ex + 20, ey + 20 + 15), (0, 255, 0), -1)
+                cv2.rectangle(img, (x - 20, ey + 20), (ex + 20, ey + 20 + 15), color, -1)
                 cv2.putText(img, f"{emotion_dict[top[1]]}: {Prob2:.2f}", (x - 15, ey + 15 + 15),
-                            cv2.FONT_HERSHEY_SIMPLEX, fontScale,(0, 0, 255), 1, cv2.LINE_AA)
+                            cv2.FONT_HERSHEY_SIMPLEX, fontScale,(0, 0, 0), 1, cv2.LINE_AA)
 
     end_time = time.time()
     print(f"Time taken for emotion recognition: {end_time - start_time} seconds")
@@ -213,19 +215,23 @@ def videoDetect(path):
 
                 top = predicted_combine[0].argsort()[-2:][::-1]
 
+                emotion = emotion_dict[top[0]]
+                color = emotion_colors[emotion]
+
                 Prob1 = predicted_combine[0][top[0]]
                 Prob2 = predicted_combine[0][top[1]]
 
                 fontScale = (width + height) / (width * height) + 0.4
 
-                cv2.rectangle(frame, (x - 20, y), (ex + 20, ey), (0, 255, 0), 1, cv2.LINE_AA)
-                cv2.rectangle(frame, (x - 20, ey), (ex + 20, ey + 20), (0, 255, 0), -1)
-                cv2.putText(frame, emotion_dict[top[0]], (x - 15, ey + 15), cv2.FONT_HERSHEY_SIMPLEX, fontScale,
-                            (0, 0, 255), 1, cv2.LINE_AA)
+                cv2.rectangle(frame, (x - 20, y), (ex + 20, ey), color, 1, cv2.LINE_AA)
+                cv2.rectangle(frame, (x - 20, ey), (ex + 20, ey + 20), color, -1)
+                cv2.putText(frame, f"{emotion_dict[top[0]]}: {Prob1:.2f}", (x - 15, ey + 15),
+                            cv2.FONT_HERSHEY_SIMPLEX, fontScale,
+                            (0, 0, 0), 1, cv2.LINE_AA)
                 if Prob2 > 0.05:
-                    cv2.rectangle(frame, (x - 20, ey + 20), (ex + 20, ey + 20 + 15), (0, 255, 0), -1)
-                    cv2.putText(frame, emotion_dict[top[1]], (x - 15, ey + 15 + 15),
-                                cv2.FONT_HERSHEY_SIMPLEX, fontScale, (0, 0, 255), 1, cv2.LINE_AA)
+                    cv2.rectangle(frame, (x - 20, ey + 20), (ex + 20, ey + 20 + 15), color, -1)
+                    cv2.putText(frame, f"{emotion_dict[top[1]]}: {Prob2:.2f}", (x - 15, ey + 15 + 15),
+                                cv2.FONT_HERSHEY_SIMPLEX, fontScale, (0, 0, 0), 1, cv2.LINE_AA)
         cv2.imshow('PRESS Q TO EXIT', frame)
 
 
@@ -314,8 +320,8 @@ class Ui_Form(object):
                     stream.release()
                     cv2.destroyAllWindows()
                     return
-                ret, frame = stream.read()
-                gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                ret, frame = stream.read() # read the frame from the camera
+                gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) # convert the frame to grayscale
                 try:
                     blob = cv2.dnn.blobFromImage(cv2.resize(frame, (300, 300)), 1.0, (300, 300), (104.0, 177.0, 123.0))
                 except:
@@ -364,11 +370,12 @@ class Ui_Form(object):
                         fontScale = (width + height) / (width * height) + 0.4
                         cv2.rectangle(frame, (x - 20, y), (ex + 20, ey), color, 1, cv2.LINE_AA)
                         cv2.rectangle(frame, (x - 20, ey), (ex + 20, ey + 20), color, -1)
-                        cv2.putText(frame, emotion_dict[top[0]], (x - 15, ey + 15), cv2.FONT_HERSHEY_SIMPLEX, fontScale,
+                        cv2.putText(frame, f"{emotion_dict[top[0]]}: {Prob1:.2f}", (x - 15, ey + 15),
+                                    cv2.FONT_HERSHEY_SIMPLEX, fontScale,
                                     (0, 0, 0), 1, cv2.LINE_AA)
                         if Prob2 > 0.05:  # if the rating is higher than threshold
                             cv2.rectangle(frame, (x - 20, ey + 20), (ex + 20, ey + 20 + 15), color, -1)
-                            cv2.putText(frame, emotion_dict[top[1]], (x - 15, ey + 15 + 15),
+                            cv2.putText(frame, f"{emotion_dict[top[1]]}: {Prob2:.2f}", (x - 15, ey + 15 + 15),
                                         cv2.FONT_HERSHEY_SIMPLEX, fontScale, (0, 0, 0), 1, cv2.LINE_AA)
 
                         end_time = time.time()

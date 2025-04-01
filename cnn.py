@@ -23,7 +23,7 @@ def load_data():
     print(y.shape)
     print(y)
 
-    Split = np.load('dataset/Fer_Usage.npy') # Load the split data
+    Split = np.load('dataset/Fer_Usage.npy')
     x_index, = np.where(Split == 'Training')
     y_index, = np.where(Split == 'PublicTest')
     z_index, = np.where(Split == 'PrivateTest')
@@ -276,7 +276,7 @@ def CNN_and_SIFT():
     if y_index.size == 0:
         raise ValueError("No 'PublicTest' entries found in Split array")
 
-    X_SIFT = np.load("/Users/hiimbias/PycharmProjects/FED/models/Fer2013_SIFTDetector_Histogram_GEN.npy", allow_pickle=True)
+    X_SIFT = np.load("/models/descriptors/Fer2013_SIFTDetector_Histogram_GEN.npy", allow_pickle=True)
     X_SIFT = X_SIFT.astype('float64')
 
     # Print the shape of X_SIFT before slicing

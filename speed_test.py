@@ -6,21 +6,22 @@ from tensorflow.keras.models import model_from_json
 def Test_Accuracy_And_Speed(X, Y):
     print("Loading models...")
     # Load models
-    with open("models/CNN_v1_Fer2013_model.json", 'r') as json_file:
+    with open("models/CNN_v1/CNN_v1_Fer2013_model.json", 'r') as json_file:
         model_CNN_1 = model_from_json(json_file.read())
     model_CNN_1.load_weights("/Users/hiimbias/PycharmProjects/FED/models/CNN_v1_Fer2013_best_weights.keras")
 
-    with open("models/CNN_v2_Fer2013_model.json", 'r') as json_file:
+    with open("models/CNN_v2/CNN_v2_Fer2013_model.json", 'r') as json_file:
         model_CNN_2 = model_from_json(json_file.read())
     model_CNN_2.load_weights("/Users/hiimbias/PycharmProjects/FED/models/CNN_v2_Fer2013_final_weights.keras")
 
-    with open("models/ConvSIFTNET_Fer2013_model.json", 'r') as json_file:
+    with open("models/CNN_SIFT/ConvSIFTNET_Fer2013_model.json", 'r') as json_file:
         model_SIFTNET = model_from_json(json_file.read())
     model_SIFTNET.load_weights("/Users/hiimbias/PycharmProjects/FED/models/ConvSIFTNET_Fer2013_final_model.keras")
 
     # Load SIFT data
-    X_SIFT = np.load("/Users/hiimbias/PycharmProjects/FED/models/Fer2013_SIFTDetector_Histogram_GEN.npy").astype('float64')
-    X_SIFT_Test = X_SIFT[:len(X)]
+    X_SIFT = np.load("/models/descriptors/Fer2013_SIFTDetector_Histogram_GEN.npy").astype('float64')
+    X_SIFT_Test = X_SIFT[:len(X)] # Use only the first len(X) samples
+    print(X_SIFT.shape)
 
     # Evaluate models
     model_results = []
@@ -65,6 +66,7 @@ def Test_Accuracy_And_Speed(X, Y):
     for model_name, acc, time_taken in model_results:
         print(f"Model: {model_name}")
         print(f"  Accuracy: {acc:.2f}%")
+        print(f"  Time taken: {time_taken:.2f} seconds\n")
 
     # Print confusion matrix and classification report for Combined Model
     print(f"Confusion Matrix for Combined Model:\n{confusion_matrix(true_classes, combined_classes)}")

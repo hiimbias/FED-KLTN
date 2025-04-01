@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 
 def Extractor(Images):
-    Detector = cv2.SIFT_create()
+    Detector = cv2.SIFT_create() # Initialize SIFT Detector
     desc_seq = []
     count = 0
 
@@ -35,7 +35,7 @@ def Extractor(Images):
 
     # Concatenate all descriptors and save
     descriptors_data = np.concatenate(desc_seq, axis=0) if desc_seq else np.empty((0, 128))
-    filename = "generator/NEW_SIFTDescriptors_FER2013.npy"
+    filename = "../generator/NEW_SIFTDescriptors_FER2013.npy"
     np.save(filename, descriptors_data)
     print(f"{filename} has been saved to disk!")
 

@@ -1,6 +1,8 @@
-/models/
-/image/
+/models/*
+!/models/model.txt
 /generator/
 /dataset/
-/.venv/
+/venv/
+/__pycache__/
 /New SIFT MODEL/
+.DS_Store
